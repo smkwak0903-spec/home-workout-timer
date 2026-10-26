@@ -14,7 +14,7 @@ yoga,
 [...warm,E('스쿼트','17회',3),E('리버스 런지','좌우 각 12회',3),E('한 발 글루트 브리지','좌우 각 6회 · 선택',2),E('카프 레이즈','18회',3),E('무릎 사이드 플랭크','좌우 각 15초',2),T('제자리 걷기 인터벌',600,'유산소','빠르게 1분 · 느리게 1분 번갈아'),...cool],yoga,[T('완전 휴식',0,'휴식','오늘은 쉬는 날')]];
 let transitionSeconds=5;
 function expand(plan){let arr=[];plan.forEach((p,j)=>{
- if(j>0&&p.name!==plan[j-1].name){arr.push(T('자세 변경 · 다음 운동 준비',transitionSeconds,'자세 변경',p.name+' 준비'));}
+ if(j>0&&p.name!==plan[j-1].name){if(plan[j-1].phase==='운동'&&p.phase==='운동')arr.push(T('운동 사이 휴식',90,'휴식'));arr.push(T('자세 변경 · 다음 운동 준비',transitionSeconds,'자세 변경',p.name+' 준비'));}
  if(p.phase!=='운동'){arr.push({...p})}
  else{for(let i=0;i<p.sets;i++){arr.push(T(p.name,0,'운동',`${p.reps} · ${i+1}/${p.sets}세트`));if(i<p.sets-1)arr.push(T('세트 사이 휴식',p.rest,'휴식'))}}
 });return arr}
@@ -59,7 +59,7 @@ $('transitionLength').value=String(extra.transition);$('countdownBeep').checked=
 function saveExtra(){extra={transition:transitionSeconds,countdown:$('countdownBeep').checked,autoRecord:$('autoRecord').checked};try{localStorage.setItem(extraKey,JSON.stringify(extra))}catch(e){}}
 $('transitionLength').onchange=()=>{pause();transitionSeconds=Number($('transitionLength').value)===3?3:5;sequences=plans.map(expand);index=0;remaining=current().sec;finished=false;saveExtra();render();extraMessage('자세 변경 시간을 '+transitionSeconds+'초로 설정했어. 진행 위치는 처음으로 돌아갔어.')};
 $('countdownBeep').onchange=saveExtra;$('autoRecord').onchange=saveExtra;
-$('completeSet').onclick=()=>{if(current().phase!=='운동'||finished)return;pause();advance()};
+$('completeSet').onclick=()=>{if(current().phase!=='운동'||finished)return;pause();advance();if(!finished&&current().sec>0){running=true;deadline=Date.now()+remaining*1000;lastBeepSecond=0;timer=setInterval(tick,200);render()}};
 function adjustRest(delta){if(current().phase!=='휴식')return;remaining=Math.max(0,Math.min(1800,remaining+delta));if(running){deadline=Date.now()+remaining*1000;lastBeepSecond=0}renderClock()}
 $('restMinus').onclick=()=>adjustRest(-15);$('restPlus').onclick=()=>adjustRest(15);
 function getLog(){try{let v=JSON.parse(localStorage.getItem(logKey)||'[]');return Array.isArray(v)?v:[]}catch(e){return []}}
